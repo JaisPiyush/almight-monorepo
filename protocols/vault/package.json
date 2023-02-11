@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "author": "Piyush Jaiswal",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@almight/contract-interfaces": "workspace: *",
+    "@almight/contract-utils": "workspace: *"
+  }
 }

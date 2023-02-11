@@ -15,6 +15,7 @@
     "eslint": "^8.34.0",
     "eslint-utils": "^3.0.0",
     "prettier": "^2.8.4",
+    "solc": "^0.8.18",
     "solhint": "^3.3.8",
     "tsdx": "^0.14.1",
     "vitest": "^0.28.4"
