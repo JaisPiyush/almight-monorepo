@@ -1,0 +1,22 @@
+{
+  "name": "almight-monorepo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Piyush Jaiswal <iampiyushjaiswal103@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "protocols/*",
+    "apps/*"
+  ],
+  "devDependencies": {
+    "@typescript-eslint/parser": "^5.51.0",
+    "eslint": "^8.34.0",
+    "eslint-utils": "^3.0.0",
+    "prettier": "^2.8.4",
+    "solhint": "^3.3.8",
+    "tsdx": "^0.14.1",
+    "vitest": "^0.28.4"
+  }
+}
