@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@almight/contract-interfaces/contracts/utils/IAccessAuthorizer.sol";
+import "@almight/contract-interfaces/contracts/utils/authorizers/IAccessAuthorizer.sol";
 
 /**
  @title AccessAuthorizer
@@ -14,12 +14,14 @@ import "@almight/contract-interfaces/contracts/utils/IAccessAuthorizer.sol";
             defined by each target contract `IAccessAuthorization.getActionId`
     
  */
+
+
 contract AccessAuthorizer is IAccessAuthorizer {
 
     mapping(bytes32 => bool) _permissionRecord;
     mapping(bytes32 => uint32) _permissionDeadline;
 
-    address public immutable EVERYWEHRE;
+    address public immutable EVERYWHERE;
 
     bytes32 public immutable GRANT_ACTION_ID;
     bytes32 public immutable REVOKE_ACTION_ID;
@@ -35,10 +37,16 @@ contract AccessAuthorizer is IAccessAuthorizer {
     event PermissionRevoked(bytes32 indexed actionId, address indexed account, address indexed where);
 
     constructor(address admin, address everywhere) {
-        EVERYWEHRE = everywhere;
+        EVERYWHERE = everywhere;
+        bytes32 grantActionId = getActionId(bytes4(keccak256("grantPermissions(bytes32,address,address)")));
+        bytes32 revokeActionId = getActionId(bytes4(keccak256("revokePermissions(bytes32,address,address)")));
+        GRANT_ACTION_ID = grantActionId;
+        REVOKE_ACTION_ID = revokeActionId;
 
-        bytes32 grantActionId = getActionId(AccessAuthorizer.grantPermissions.selector);
-        bytes32 revokeActionId = getActionId(AccessAuthorizer.revokePermissions.selector);
+        // Add super powers to admin for 3 months
+        uint32 deadline = 3 * (30 days);
+        _grantPermission(grantActionId, admin, EVERYWHERE, deadline);
+        _grantPermission(revokeActionId, admin, EVERYWHERE, deadline);
     }
 
 
@@ -85,7 +93,7 @@ contract AccessAuthorizer is IAccessAuthorizer {
         return (_permissionRecord[permissionId] &&
             _permissionDeadline[permissionId] >= timestamp || _permissionDeadline[permissionId] == 0
          ) || 
-        _permissionRecord[getPermissionId(actionId, account, EVERYWEHRE)];
+        _permissionRecord[getPermissionId(actionId, account, EVERYWHERE)];
     }
 
     /**
@@ -145,25 +153,25 @@ contract AccessAuthorizer is IAccessAuthorizer {
     }
 
 
-    function grantPermissions(bytes32 actionId, address account, address where) public view {
+    function grantPermissions(bytes32 actionId, address account, address where) public  {
         require(where != address(0) && account != address(0), "ZERO_ADDR");
         require(canGrantPermission(actionId, msg.sender, where), "UNAUTHORIZED");
         _grantPermission(actionId, account, where);
     }
 
-    function grantPermissionsWithDeadline(bytes32 actionId, address account, address where, uint32 deadline) public view {
+    function grantPermissionsWithDeadline(bytes32 actionId, address account, address where, uint32 deadline) public  {
         require(where != address(0) && account != address(0), "ZERO_ADDR");
         require(canGrantPermission(actionId, msg.sender, where), "UNAUTHORIZED");
         _grantPermission(actionId, account, where, deadline);
     }
 
-    function revokePermissions(bytes32 actionId, address account, address where) public view {
+    function revokePermissions(bytes32 actionId, address account, address where) public  {
         require(where != address(0) && account != address(0), "ZERO_ADDR");
         require(canRevokePermission(actionId, msg.sender, where), "UNAUTHORIZED");
         _revokePermission(actionId, account, where);
     }
 
-    function canPerform(bytes32 actionId, address account, address where) public view returns (bool) {
+    function canPerform(bytes32 actionId, address account, address where) public view  returns (bool) {
         return hasPermission(actionId, account, where);
     }
 }
