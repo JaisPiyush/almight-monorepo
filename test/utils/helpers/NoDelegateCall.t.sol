@@ -10,6 +10,7 @@ contract DummyContract is NoDelegateCall {
     function addSum(uint256 a, uint256 b) external view returns(address, uint256) {
         return (address(this), a + b);
     }
+
 }
 
 
@@ -34,6 +35,7 @@ contract NoDelegateCallTest is Test {
         assertFalse(success);
 
     }
+
 
 
 }

@@ -31,22 +31,30 @@ interface ITokenBalance {
     This method has to check the existance of required amount of token in spender's internal balance as well
     as personal token holdings.
 
-    @notice The function can only be called from `UserPositionController`
 
     */
     function sendToken(address token, uint256 amount, FundTransferParam memory fundTransferParam) external;
 
-    /**
-    @dev Approve `spender` over `owner`'s `token` for `amount` from internal balance of the spender.
     
-    @notice The function can only be called from `UserPositionController`
-    */
 
+    /// @notice Deposit the tokens from owner to internal balance of the owner
+    /// Any ERC20 token with less then the required amount will revert the entire function
+    /// Can be called directly by the user or through the `UserPositionController`.
+    /// The tokens must be approved by the user for `Vault`
+    function depositTokens(address owner, address[] calldata tokens, uint256[] calldata amount) external;
+
+    /// @notice Withdraw the tokens from owner internal balance to the original holding of the token
+    /// Can be called directly by the user or through the `UserPositionController`
+    function withdrawTokens(address owner, address[] calldata tokens, uint256[] calldata amounts) external;
+
+
+ 
+    ///@dev Approve `spender` over `owner`'s `token` for `amount` from internal balance of the spender.
     function approveInternalBalance(address token, address owner, address spender, uint256 amount) external;
+
 
     /// @param deadline deadline is the time limit upto which the approval is valid
     /// default deadline is `0` which means the approval is valid indefinitely
-    /// 
     function approveInternalBalance(address token, address owner, 
                                     address spender, uint256 amount, uint32 deadline) external;
 
