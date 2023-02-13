@@ -8,7 +8,8 @@ allow_paths = ['../']
 remappings = [
     'ds-test/=lib/forge-std/lib/ds-test/src/',
     'forge-std/=lib/forge-std/src/',
-    '@almight/=node_modules/@almight/'
+    'openzeppelin-contracts/=lib/openzeppelin-contracts/',
+    '@almight/protocols/=protocols/',
 ]
 optimizer = true
 optimizer_runs = 9999
