@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.9;
 
 import "@almight/contract-interfaces/contracts/utils/authorizers/IAccessAuthorizer.sol";
 
@@ -141,14 +141,14 @@ contract AccessAuthorizer is IAccessAuthorizer {
     /**
     @notice Returns true if `granter` can grant the actionId
     */
-    function canGrantPermission(bytes32 actionId, address granter, address where ) internal view returns (bool) {
+    function canGrantPermission(bytes32 actionId, address granter, address where ) public view returns (bool) {
         return hasPermission(getGrantPermissionActionId(actionId), granter, where);
     }
 
     /**
     @notice Returns true if `revoker` can grant the actionId
     */
-    function canRevokePermission(bytes32 actionId, address revoker, address where ) internal view returns (bool) {
+    function canRevokePermission(bytes32 actionId, address revoker, address where ) public view returns (bool) {
         return hasPermission(getRevokePermissionActionId(actionId), revoker, where);
     }
 
