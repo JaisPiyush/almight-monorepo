@@ -9,21 +9,18 @@ import "@almight/contract-interfaces/contracts/utils/authorizers/IAccessAuthoriz
  
  Users or Smart contracts are allowed to perform actions if they have the permission to do so.
 
- Glossary:
-    - Action: Operation that can be performed to a target contract. These are identified by a unique bytes32 `actionId`
-            defined by each target contract `IAccessAuthorization.getActionId`
     
  */
 
 
-contract AccessAuthorizer is IAccessAuthorizer {
+abstract contract AccessAuthorizer is IAccessAuthorizer {
 
-    mapping(bytes32 => bool) _permissionRecord;
-    mapping(bytes32 => uint32) _permissionDeadline;
+    mapping(bytes32 => bool) private _permissionRecord;
+    mapping(bytes32 => uint32) private _permissionDeadline;
 
-    address public immutable EVERYWHERE;
-
+    // solhint-disable-next-line func-name-mixedcase
     bytes32 public immutable GRANT_ACTION_ID;
+    // solhint-disable-next-line func-name-mixedcase
     bytes32 public immutable REVOKE_ACTION_ID;
 
     /**
@@ -36,8 +33,7 @@ contract AccessAuthorizer is IAccessAuthorizer {
      */
     event PermissionRevoked(bytes32 indexed actionId, address indexed account, address indexed where);
 
-    constructor(address admin, address everywhere) {
-        EVERYWHERE = everywhere;
+    constructor(address admin) {
         bytes32 grantActionId = getActionId(bytes4(keccak256("grantPermissions(bytes32,address,address)")));
         bytes32 revokeActionId = getActionId(bytes4(keccak256("revokePermissions(bytes32,address,address)")));
         GRANT_ACTION_ID = grantActionId;
@@ -45,8 +41,8 @@ contract AccessAuthorizer is IAccessAuthorizer {
 
         // Add super powers to admin for 3 months
         uint32 deadline = 3 * (30 days);
-        _grantPermission(grantActionId, admin, EVERYWHERE, deadline);
-        _grantPermission(revokeActionId, admin, EVERYWHERE, deadline);
+        _grantPermission(grantActionId, admin, address(this), deadline);
+        _grantPermission(revokeActionId, admin, address(this), deadline);
     }
 
 
@@ -88,12 +84,11 @@ contract AccessAuthorizer is IAccessAuthorizer {
      */
     function hasPermission(bytes32 actionId, address account, address where) public view returns (bool) {
         require(where != address(0) && account != address(0), "ZERO_ADDR");
-        uint32 timestamp = uint32(block.timestamp);
         bytes32 permissionId = getPermissionId(actionId, account, where);
         return (_permissionRecord[permissionId] &&
-            _permissionDeadline[permissionId] >= timestamp || _permissionDeadline[permissionId] == 0
-         ) || 
-        _permissionRecord[getPermissionId(actionId, account, EVERYWHERE)];
+            _permissionDeadline[permissionId] == 0 ||  
+            _permissionDeadline[permissionId] >= uint32(block.timestamp)
+         );
     }
 
     /**
@@ -154,20 +149,23 @@ contract AccessAuthorizer is IAccessAuthorizer {
 
 
     function grantPermissions(bytes32 actionId, address account, address where) public  {
-        require(where != address(0) && account != address(0), "ZERO_ADDR");
-        require(canGrantPermission(actionId, msg.sender, where), "UNAUTHORIZED");
+        //TODO: Add error code Zero Address and "CanNotGrantPermissions"
+        require(where != address(0) && account != address(0), "0ADDR");
+        require(canGrantPermission(actionId, msg.sender, where), "CNGPs");
         _grantPermission(actionId, account, where);
     }
 
     function grantPermissionsWithDeadline(bytes32 actionId, address account, address where, uint32 deadline) public  {
-        require(where != address(0) && account != address(0), "ZERO_ADDR");
-        require(canGrantPermission(actionId, msg.sender, where), "UNAUTHORIZED");
+        require(where != address(0) && account != address(0), "0ADDR");
+        require(canGrantPermission(actionId, msg.sender, where), "CNGPs");
         _grantPermission(actionId, account, where, deadline);
     }
 
     function revokePermissions(bytes32 actionId, address account, address where) public  {
-        require(where != address(0) && account != address(0), "ZERO_ADDR");
-        require(canRevokePermission(actionId, msg.sender, where), "UNAUTHORIZED");
+        // TODO: add error code "CanNotRevokePermissions" and "DnHPs"
+        require(where != address(0) && account != address(0), "0ADDR");
+        require(hasPermission(actionId, account, where), "DnHPs");
+        require(canRevokePermission(actionId, msg.sender, where), "CNRPv");
         _revokePermission(actionId, account, where);
     }
 
