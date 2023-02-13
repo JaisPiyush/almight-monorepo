@@ -8,7 +8,8 @@
   "workspaces": [
     "packages/*",
     "protocols/*",
-    "apps/*"
+    "apps/*",
+    "lib"
   ],
   "devDependencies": {
     "@typescript-eslint/parser": "^5.51.0",

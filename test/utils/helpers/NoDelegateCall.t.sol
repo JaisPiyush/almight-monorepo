@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "forge-std/Test.sol";
+import "@almight/modules/forge-std/src/Test.sol";
 import "../../../protocols/utils/contracts/helpers/NoDelegateCall.sol";
 
 
