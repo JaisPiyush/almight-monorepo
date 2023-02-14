@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+ //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
 import "@almight/contract-interfaces/contracts/utils/authorizers/IAccessAuthorizer.sol";
@@ -94,7 +94,8 @@ abstract contract AccessAuthorizer is IAccessAuthorizer {
     /**
     @dev Grant permission to `account` for actionId on contract `where` with `deadline`
      */
-    function _grantPermission(bytes32 actionId, address account, address where, uint32 deadline) private {
+    function _grantPermission(bytes32 actionId, address account, address where, uint32 deadline) 
+        internal {
         bytes32 permissionId = getPermissionId(actionId, account, where);
         if (!_permissionRecord[permissionId]) {
             _permissionRecord[permissionId] = true;
@@ -110,7 +111,7 @@ abstract contract AccessAuthorizer is IAccessAuthorizer {
     @dev Grant permission to `account` for actionId on contract `where` with `deadline` set to 0 (forever)
     */
 
-    function _grantPermission(bytes32 actionId, address account, address where) private {
+    function _grantPermission(bytes32 actionId, address account, address where) internal {
         bytes32 permissionId = getPermissionId(actionId, account, where);
         if (!_permissionRecord[permissionId]) {
             _permissionRecord[permissionId] = true;
@@ -123,7 +124,7 @@ abstract contract AccessAuthorizer is IAccessAuthorizer {
     @dev Revoke the granted permission
     */
 
-    function _revokePermission(bytes32 actionId, address account, address where) private {
+    function _revokePermission(bytes32 actionId, address account, address where) internal {
         bytes32 permissionId = getPermissionId(actionId, account, where);
         if (_permissionRecord[permissionId]) {
             _permissionRecord[permissionId] = false;

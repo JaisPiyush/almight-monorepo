@@ -3,6 +3,7 @@ pragma solidity ^0.8.9;
 
 interface ITokenBalance {
 
+
     /// @notice Returns the internal balance of the token held by the user
     function getBalance(address token, address user) external view returns(uint256);    
 
@@ -39,13 +40,19 @@ interface ITokenBalance {
     /**
     @dev Sends `amount` of `token` to `fundTransferParam.recipient`. If the `toInternalBalance` is true, the token 
     is deposited in the internal balance of `recipient`.
-
-
-
     */
     function sendToken(address token, uint256 amount, FundTransferParam memory fundTransferParam) external;
 
-    
+     /**
+    @dev Sends `amount` of `token` to `fundTransferParam.recipient`. If the `toInternalBalance` is true, the token 
+    is deposited in the internal balance of `recipient`.
+    */
+    function sendTokenFrom(address spender, address token, uint256 amount, 
+        FundTransferParam memory fundTransferParam) external;
+
+    ///@notice convert wrapped currency into native currency and deposit in
+    /// the internal balance of the transaction sender
+    function deposit() external payable;
 
     /// @notice Deposit the tokens from recpient to internal balance of the recpient
     /// Any ERC20 token with less then the required amount will revert the entire function
@@ -75,6 +82,7 @@ interface ITokenBalance {
     function approveDecrease(address token, address spender, uint256 amount) external;
 
     function revokeAllowance(address token, address spender) external;
+
 
 
 }

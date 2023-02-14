@@ -10,32 +10,28 @@ abstract contract TemporarilyPausable is Pausable {
     bool private _paused;
     uint256 public constant MAX_PAUSE_DURATION = 90 days;
     uint256 public constant DEFAULT_PAUSE_DURATION = 5 days;
-    uint256 private _pauseDuration;
+    uint256 public pauseDuration;
     uint32 private _pausedOn;
     
-    constructor(uint256 pauseDuration_) Pausable() {
 
-        if (pauseDuration_ == 0) {
-            _pauseDuration = DEFAULT_PAUSE_DURATION;
+    function _estimatePauseDuration(uint256 duration) private pure returns(uint256) {
+        if (duration == 0) {
+           return DEFAULT_PAUSE_DURATION;
         }else {
-            _pauseDuration = pauseDuration_ > MAX_PAUSE_DURATION ? MAX_PAUSE_DURATION : pauseDuration_;
+            return duration > MAX_PAUSE_DURATION ? MAX_PAUSE_DURATION : duration;
         }
     }
 
-
-    function _pause() internal virtual override whenNotPaused {
+    function _pause(uint256 duration) internal virtual whenNotPaused {
         _paused = true;
+        pauseDuration = _estimatePauseDuration(duration);
         _pausedOn = uint32(block.timestamp);
         emit Paused(_msgSender());
 
     }
 
-    function _setPauseDuration(uint256 pauseDuration_) internal virtual whenNotPaused {
-        _pauseDuration = pauseDuration_;
-    } 
-
-    function pauseDuration() public view returns (uint256) {
-        return _pauseDuration;
+    function _pause() internal virtual override whenNotPaused {
+        _pause(0);
     }
 
     function pausedOn() public view returns (uint32) {
@@ -43,7 +39,7 @@ abstract contract TemporarilyPausable is Pausable {
     }
 
     function paused() public view override returns (bool) {
-        return _paused && uint32(block.timestamp) - _pausedOn < _pauseDuration;
+        return _paused && uint32(block.timestamp) - _pausedOn < pauseDuration;
     }
 
 }
