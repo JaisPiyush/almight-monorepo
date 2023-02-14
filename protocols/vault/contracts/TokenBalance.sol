@@ -33,9 +33,8 @@ abstract contract TokenBalance is ITokenBalance,
         address indexed token, uint256 amount);
     
     
-    constructor(address wrappedNative) TemporarilyPausable(0) {
+    constructor(address wrappedNative) {
         WRAPPED_NATIVE = wrappedNative;
-        // userPositionController = _userPositionController; 
     }
 
     function getBalance(address owner, address token) public view returns(uint256) {

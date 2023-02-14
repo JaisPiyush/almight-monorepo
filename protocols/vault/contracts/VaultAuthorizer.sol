@@ -62,12 +62,16 @@ abstract contract VaultAuthorizer is
         _grantPermission(REGISTER_CONTROLLER_ACTION_ID, admin_, address(this));
         _grantPermission(REMOVE_CONTROLLER_ACTION_ID, admin_, address(this));
         _grantPermission(CHANGE_ADMIN_ACTION_ID, admin_, address(this));
+        _grantPermission(PAUSE_ACTION_ID, admin_, address(this));
+        _grantPermission(UNPAUSE_ACTION_ID, admin_, address(this));
     }
 
     function _revokeAdminPermissions(address admin_) private {
         _revokePermission(REGISTER_CONTROLLER_ACTION_ID, admin_, address(this));
         _revokePermission(REMOVE_CONTROLLER_ACTION_ID, admin_, address(this));
         _revokePermission(CHANGE_ADMIN_ACTION_ID, admin_, address(this));
+        _revokePermission(PAUSE_ACTION_ID, admin_, address(this));
+        _revokePermission(UNPAUSE_ACTION_ID, admin_, address(this));
     }
    
     function canRegisterController(address addr) public view returns(bool) {
