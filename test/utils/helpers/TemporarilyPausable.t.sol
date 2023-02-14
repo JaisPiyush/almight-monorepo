@@ -7,11 +7,9 @@ import "../../../protocols/utils/contracts/helpers/TemporarilyPausable.sol";
 contract DummyPausableContract is TemporarilyPausable {
 
 
-    function pause() public {
-        _pause();
+    function pause(uint256 duration) public {
+        _pause(duration);
     }
-
-    constructor(uint256 pauseDuration) TemporarilyPausable(pauseDuration) {}
 
 
     function add(uint256 a, uint256 b) public view whenNotPaused returns(uint256) {
@@ -28,17 +26,17 @@ contract DummyPausableContract is TemporarilyPausable {
 contract TemporarilyPausableTest is Test {
 
     function test_ranomPauseDurations(uint256 duration) public {
-        DummyPausableContract pauser = new DummyPausableContract(duration);
+        DummyPausableContract pauser = new DummyPausableContract();
         assertEq(pauser.add(4, 5), 9);
-        pauser.pause();
+        pauser.pause(duration);
         vm.expectRevert();
         pauser.add(4,5);
     }
 
     function test_randomPauseDurationTimeWarp(uint32 duration) public  {
-        DummyPausableContract pauser = new DummyPausableContract(duration);
+        DummyPausableContract pauser = new DummyPausableContract();
         assertEq(pauser.add(4, 5), 9);
-        pauser.pause();
+        pauser.pause(duration);
         if (duration == 0) {
             assertTrue(pauser.paused());
             return;

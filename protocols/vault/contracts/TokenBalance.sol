@@ -13,6 +13,7 @@ abstract contract TokenBalance is ITokenBalance,
         TemporarilyPausable, ReentrancyGuard {
 
     ///@notice address of WFIL (Filecoin) or WETH (Ethereum)
+    //solhint-disable-next-line var-name-mixedcase
     address public immutable WRAPPED_NATIVE;
 
     // address public immutable userPositionController;
@@ -64,8 +65,10 @@ abstract contract TokenBalance is ITokenBalance,
                 return true;
             }
             AllowanceData memory _allowanceData = _allowance[owner][spender][token];
+
             return _allowanceData.amount >= amount && 
                 (_allowanceData.deadline == 0 ||
+                
                 uint32(block.timestamp) <= _allowanceData.deadline);
     }
 
