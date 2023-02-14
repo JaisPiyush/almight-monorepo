@@ -3,11 +3,22 @@ pragma solidity ^0.8.9;
 
 import "@almight/contract-interfaces/contracts/vault/ITokenBalance.sol";
 import "@almight/contract-utils/contracts/helpers/TemporarilyPausable.sol";
+import "@almight/contract-interfaces/contracts/IWFIL.sol";
 
 import "@almight/modules/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "@almight/modules/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol";
 
 abstract contract TokenBalance is ITokenBalance, TemporarilyPausable, ReentrancyGuard {
+
+
+    address public immutable WRAPPED_NATIVE;
+
+
+
+    constructor(address wrappedNative) TemporarilyPausable(0) {
+        WRAPPED_NATIVE = wrappedNative;
+    }
+
 
     mapping(address => mapping(address => uint256)) private _internalBalances;
     mapping(address => address[]) private _tokenHoldings;
@@ -187,6 +198,13 @@ abstract contract TokenBalance is ITokenBalance, TemporarilyPausable, Reentrancy
     }
 
 
+    function deposit() external payable whenNotPaused noReentrant {
+        require(msg.value > 0, "INSA");
+        _increaseInternalBalance(msg.sender, WRAPPED_NATIVE. msg.value); 
+        IWFIL(WRAPPED_NATIVE).deposit{value: msg.value}();     
+    }
+
+
     function depositTokens(address recipient, address[] calldata tokens, uint256[] calldata amounts) 
         external whentNotPaused noReentrant {
             require(tokens.length == amounts.length, "INCORRECT_DATA");
@@ -214,7 +232,6 @@ abstract contract TokenBalance is ITokenBalance, TemporarilyPausable, Reentrancy
             }
 
     }
-
 
     
 }
