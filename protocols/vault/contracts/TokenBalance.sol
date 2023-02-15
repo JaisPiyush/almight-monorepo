@@ -3,14 +3,13 @@ pragma solidity ^0.8.9;
 
 import "@almight/contract-interfaces/contracts/vault/ITokenBalance.sol";
 import "@almight/contract-interfaces/contracts/vault/IVaultAuthorizer.sol";
-import "@almight/contract-utils/contracts/helpers/TemporarilyPausable.sol";
+
 import "@almight/contract-interfaces/contracts/utils/IWFIL.sol";
 
 import "@almight/modules/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import "@almight/modules/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol";
 
-abstract contract TokenBalance is ITokenBalance, 
-        TemporarilyPausable, ReentrancyGuard {
+
+abstract contract TokenBalance is ITokenBalance {
 
     ///@notice address of WFIL (Filecoin) or WETH (Ethereum)
     //solhint-disable-next-line var-name-mixedcase
@@ -74,7 +73,7 @@ abstract contract TokenBalance is ITokenBalance,
 
 
     function approve(address token,address spender, uint256 amount, uint32 deadline)
-            public whenNotPaused
+            public
     {
         _allowance[msg.sender][spender][token] = AllowanceData(amount, deadline);
         emit Approval(msg.sender, spender, token, amount);

@@ -2,17 +2,24 @@
 pragma solidity ^0.8.9; 
 
 import "./TokenBalance.sol";
-abstract contract TokenHandler is TokenBalance {
+
+import "@almight/contract-interfaces/contracts/vault/ITokenHandler.sol";
+import "@almight/modules/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol";
+import "@almight/contract-utils/contracts/helpers/TemporarilyPausable.sol";
+
+abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHandler, TokenBalance {
 
     event Deposit(address indexed owner, address indexed token, uint256 amount);
     event Withdraw(address indexed recp, address indexed token, uint256 amount);
-    event Transfer(address indexed sender, ReserveType indexed reserveType,
+    event Transfer(address indexed sender, ITokenHandler.ReserveType indexed reserveType,
                    address indexed recipient, bool toInternalBalance, uint256 amount
     );
 
+    constructor(address wNative) TokenBalance(wNative) {}
+
 
     function sendTokenFrom(address spender, address token, uint256 amount, 
-            FundTransferParam calldata  fundTransferParam
+            FundTransferParam memory  fundTransferParam
         ) public whenNotPaused nonReentrant {
             require(fundTransferParam.sender != address(0), "0ADDR");
             if(fundTransferParam.reserveType == ReserveType.Internal) {
@@ -64,14 +71,17 @@ abstract contract TokenHandler is TokenBalance {
                      IERC20(token).transferFrom(fundTransferParam.sender, fundTransferParam.recipient, amount);
                 }
             }else if(fundTransferParam.reserveType == ReserveType.Both) {
-                if (fundTransferParam.toInternalBalance) {
-                    require(fundTransferParam.sender != fundTransferParam.recipient, "CIRCULAR_TRANSFER");
-                    // Check for allowance to spend sender's token
-                    uint256 _balance = getBalance(fundTransferParam.sender, token);
+
+                require(fundTransferParam.sender != fundTransferParam.recipient, "CIRCULAR_TRANSFER");
+                // Check for allowance to spend sender's token
+                uint256 _balance = getBalance(fundTransferParam.sender, token);
                     require(allowance(spender, 
                         fundTransferParam.sender, token, 
                         amount <= _balance ? amount: _balance
                     ), "SPNA");
+                if (fundTransferParam.toInternalBalance) {
+                   
+                    
                     uint256 delta = _decreaseInternalBalance(
                         fundTransferParam.sender, token, amount
                     );
@@ -85,10 +95,9 @@ abstract contract TokenHandler is TokenBalance {
                         IERC20(token).transferFrom(fundTransferParam.sender, address(this), delta);
                     }
                 }else {
-                    require(allowance(spender, 
-                        fundTransferParam.sender, token, amount), "SPNA");
+
                     uint256 delta = _decreaseInternalBalance(
-                        fundTransferParam.sender, token, amount - delta
+                        fundTransferParam.sender, token, amount
                     );
                     // Decrease token expenditure allowance for msg.sender
                     if (msg.sender != fundTransferParam.sender) {
@@ -104,47 +113,47 @@ abstract contract TokenHandler is TokenBalance {
                                 fundTransferParam.recipient, fundTransferParam.toInternalBalance,
                                 amount
                         );
-            }
+    }
 
+    
+
+
+    function sendToken(address token, uint256 amount, FundTransferParam memory fundTransferParam) public {
+        sendTokenFrom(msg.sender, token, amount, fundTransferParam); 
     }
 
 
-    function sendToken(address token, uint256 amount, FundTransferParam memory fundTransferParam) external {
-        sendTokenFrom(msg.sender, token, amount, fundTransferParam);    11
-    }
 
 
-
-
-    function deposit() external payable whenNotPaused noReentrant {
+    function deposit() external payable whenNotPaused nonReentrant {
         require(msg.value > 0, "INSA");
-        _increaseInternalBalance(msg.sender, WRAPPED_NATIVE. msg.value); 
+        _increaseInternalBalance(msg.sender, WRAPPED_NATIVE, msg.value); 
         IWFIL(WRAPPED_NATIVE).deposit{value: msg.value}();     
     }
 
 
-    function depositTokens(address recipient, address[] calldata tokens, uint256[] calldata amounts) 
-        external whentNotPaused noReentrant {
+    function depositTokens(address[] calldata tokens, uint256[] calldata amounts) 
+        external whenNotPaused nonReentrant {
             require(tokens.length == amounts.length, "INCORRECT_DATA");
             for(uint256 i = 0; i < tokens.length; i++) {
                 sendToken(tokens[i], amounts[i], FundTransferParam(
                     msg.sender,
                     ReserveType.External,
-                    owner,
+                    msg.sender,
                     true
                 ));
             }
     }
 
 
-    function withdrawTokens(address recipient, address[] calldata tokens, uint256[] calldata amounts )
-        external whentNotPaused noReentrant {
+    function withdrawTokens(address[] calldata tokens, uint256[] calldata amounts )
+        external whenNotPaused nonReentrant {
             require(tokens.length == amounts.length, "INCORRECT_DATA");
             for(uint256 i = 0; i < tokens.length; i++) {
                 sendToken(tokens[i], amounts[i], FundTransferParam(
                     msg.sender,
                     ReserveType.Internal,
-                    owner,
+                    msg.sender,
                     false
                 ));
             }

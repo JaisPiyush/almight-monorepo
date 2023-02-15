@@ -3,5 +3,4 @@ pragma solidity ^0.8.9;
 
 interface IVault {
 
-    function feeCollector() external view returns(address);
 }
