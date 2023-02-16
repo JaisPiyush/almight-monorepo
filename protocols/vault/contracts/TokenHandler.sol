@@ -104,8 +104,9 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                         _approveDecrease(token, fundTransferParam.sender, spender, amount);
                     }
                     // Transfer token from Vault to recpient
-                    IERC20(token).transfer(fundTransferParam.recipient, amount);
+                    IERC20(token).transfer(fundTransferParam.recipient, amount - delta);
                     if (delta > 0){
+
                         IERC20(token).transferFrom(fundTransferParam.sender, fundTransferParam.recipient, delta);
                     }
                     

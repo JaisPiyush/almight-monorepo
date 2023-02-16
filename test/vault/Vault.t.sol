@@ -35,6 +35,7 @@ contract VaultTokenHandlerTest is Test {
     address public admin;
     Vault public vault;
     address public sender = vm.addr(1);
+    uint256 public constant defaultBalance = 100000000000000;
 
     function setUp() public {
         wfil = new WFIL();
@@ -45,7 +46,7 @@ contract VaultTokenHandlerTest is Test {
         admin = vm.addr(1);
         vault = new Vault(admin, address(wfil));
         vm.startPrank(sender);
-        t1.deposit(sender, 100000000000000);
+        t1.deposit(sender, defaultBalance);
     }
 
     function test_ExternalToInternalTransferInsufficientAllowance() public  {  
@@ -198,5 +199,152 @@ contract VaultTokenHandlerTest is Test {
         assertFalse(vault.allowance(worker, sender, address(t1), amount));
     }
 
+    function test_internalToExternalSameOriginTransfer() public {
+        uint256 amount = 50000;
+        uint256 _t1Balance = t1.balanceOf(sender);
+        _deposit(address(t1), sender, amount);
+        assertTrue(t1.balanceOf(sender) != _t1Balance);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Internal,
+            sender,
+            false
+        );
 
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(t1.balanceOf(sender), _t1Balance);
+    }
+
+    function test_intenalToExternalDiffOriginTransfer() public {
+        address worker = vm.addr(4);
+        uint256 amount = 50000;
+        uint256 _t1Balance = t1.balanceOf(sender);
+        _deposit(address(t1), sender, amount);
+        assertTrue(t1.balanceOf(sender) != _t1Balance);
+        vault.approve(address(t1), worker, amount);
+        vm.stopPrank();
+        vm.startPrank(worker);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Internal,
+            sender,
+            false
+        );
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(t1.balanceOf(sender), _t1Balance);
+    }
+
+    function test_bothToInternalSameOriginTransferLOOPERROR() public {
+        uint256 amount = defaultBalance;
+        _deposit(address(t1), sender, amount);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Both,
+            sender,
+            true
+        );
+        vm.expectRevert("CIRCULAR_TRANSFER");
+        vault.sendToken(address(t1), amount, param);
+    }
+
+    function test_bothToInternalSameOriginTransfer() public {
+        address recp = vm.addr(3);
+        uint256 amount = defaultBalance;
+        _deposit(address(t1), sender, amount / 2);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Both,
+            recp,
+            true
+        );
+        t1.approve(address(vault), amount);
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(t1.balanceOf(sender), 0);
+        assertEq(vault.getBalance(recp, address(t1)), amount);
+    }
+
+
+    function test_bothToExternalSameOriginTransfer() public  {
+        address recp = vm.addr(3);
+        uint256 amount = defaultBalance;
+        _deposit(address(t1), sender, amount / 2);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Both,
+            recp,
+            false
+        );
+        t1.approve(address(vault), amount);
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(t1.balanceOf(sender), 0);
+        assertEq(t1.balanceOf(recp), amount);
+    }
+
+    function test_bothToExternalDiffOriginTransferAllowanceFailure() public  {
+        address recp = vm.addr(3);
+        address worker = vm.addr(4);
+        uint256 amount = defaultBalance;
+        _deposit(address(t1), sender, amount / 2);
+        vault.approve(address(t1), worker, amount / 4);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Both,
+            recp,
+            false
+        );
+        t1.approve(address(vault), amount);
+        vm.stopPrank();
+        vm.startPrank(worker);
+        bytes memory err = "SPNA";
+        vm.expectRevert(err);
+        vault.sendToken(address(t1), amount, param);
+    }
+
+    function test_bothToExternalDiffOriginTransferAllowanceSuccess() public  {
+        address recp = vm.addr(3);
+        address worker = vm.addr(4);
+        uint256 amount = defaultBalance;
+        _deposit(address(t1), sender, amount / 2);
+        vault.approve(address(t1), worker, amount / 2);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Both,
+            recp,
+            false
+        );
+        t1.approve(address(vault), amount);
+
+        vm.stopPrank();
+        vm.startPrank(worker);
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(t1.balanceOf(sender), 0);
+        assertEq(t1.balanceOf(recp), amount);
+    }
+
+    function test_bothToInternalDiffOriginTransferAllowanceSuccess() public  {
+        address recp = vm.addr(3);
+        address worker = vm.addr(4);
+        uint256 amount = defaultBalance;
+        _deposit(address(t1), sender, amount / 2);
+        vault.approve(address(t1), worker, amount / 2);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Both,
+            recp,
+            true
+        );
+        t1.approve(address(vault), amount);
+
+        vm.stopPrank();
+        vm.startPrank(worker);
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(t1.balanceOf(sender), 0);
+        assertEq(vault.getBalance(recp, address(t1)), amount);
+    }
 }
