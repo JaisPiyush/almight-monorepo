@@ -21,18 +21,22 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
     function sendTokenFrom(address spender, address token, uint256 amount, 
             FundTransferParam memory  fundTransferParam
         ) public whenNotPaused nonReentrant {
-            require(fundTransferParam.sender != address(0), "0ADDR");
+            require(fundTransferParam.sender != address(0), "0ADDR"); 
             if(fundTransferParam.reserveType == ReserveType.Internal) {
                 //TODO: Add error code "SenderNotApproved"
                 require(allowance(spender, 
                     fundTransferParam.sender, token, amount), "SPNA");
                 //TODO: Add error code "InsufficientAmount"
                 require(getBalance(fundTransferParam.sender, token) >= amount, "INSA");
-                // Decrease token expenditure allowance for msg.sender
+                ////////////////////////////////////////////////////////////////////////
+                /// Decrease token expenditure allowance for msg.sender ///////////////
+                //////////////////////////////////////////////////////////////////////
                 if (spender != fundTransferParam.sender) {
                     _approveDecrease(token, fundTransferParam.sender, spender, amount);
                 }
-                // Internal Balance to Internal Balance transfer
+                ////////////////////////////////////////////////////////////////////////
+                //// Internal Balance to Internal Balance transfer ////////////////////
+                //////////////////////////////////////////////////////////////////////
                 if(fundTransferParam.toInternalBalance) {
                     require(fundTransferParam.sender != fundTransferParam.recipient, "CIRCULAR_TRANSFER");
                     _decreaseInternalBalance(fundTransferParam.sender, token, amount);
