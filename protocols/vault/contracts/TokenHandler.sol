@@ -29,13 +29,12 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                 //TODO: Add error code "InsufficientAmount"
                 require(getBalance(fundTransferParam.sender, token) >= amount, "INSA");
                 // Decrease token expenditure allowance for msg.sender
-                if (msg.sender != fundTransferParam.sender) {
-                    approveDecrease(token, msg.sender, amount);
+                if (spender != fundTransferParam.sender) {
+                    _approveDecrease(token, fundTransferParam.sender, spender, amount);
                 }
                 // Internal Balance to Internal Balance transfer
                 if(fundTransferParam.toInternalBalance) {
                     require(fundTransferParam.sender != fundTransferParam.recipient, "CIRCULAR_TRANSFER");
-                    
                     _decreaseInternalBalance(fundTransferParam.sender, token, amount);
                     _increaseInternalBalance(fundTransferParam.recipient, token, amount);
 
@@ -75,7 +74,8 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                 require(fundTransferParam.sender != fundTransferParam.recipient, "CIRCULAR_TRANSFER");
                 // Check for allowance to spend sender's token
                 uint256 _balance = getBalance(fundTransferParam.sender, token);
-                    require(allowance(spender, 
+
+                require(allowance(spender, 
                         fundTransferParam.sender, token, 
                         amount <= _balance ? amount: _balance
                     ), "SPNA");
@@ -86,8 +86,8 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                         fundTransferParam.sender, token, amount
                     );
                     // Decrease token expenditure allowance for msg.sender
-                    if (msg.sender != fundTransferParam.sender) {
-                        approveDecrease(token, msg.sender, amount);
+                    if (spender != fundTransferParam.sender) {
+                        _approveDecrease(token, fundTransferParam.sender, spender, amount);
                     }
                     _increaseInternalBalance(fundTransferParam.recipient, token, amount);
 
@@ -99,13 +99,16 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                     uint256 delta = _decreaseInternalBalance(
                         fundTransferParam.sender, token, amount
                     );
-                    // Decrease token expenditure allowance for msg.sender
-                    if (msg.sender != fundTransferParam.sender) {
-                        approveDecrease(token, msg.sender, amount - delta);
+                    // Decrease token expenditure allowance for spender
+                    if (spender != fundTransferParam.sender) {
+                        _approveDecrease(token, fundTransferParam.sender, spender, amount);
                     }
                     // Transfer token from Vault to recpient
                     IERC20(token).transfer(fundTransferParam.recipient, amount);
-                    IERC20(token).transferFrom(fundTransferParam.sender, fundTransferParam.recipient, delta);
+                    if (delta > 0){
+                        IERC20(token).transferFrom(fundTransferParam.sender, fundTransferParam.recipient, delta);
+                    }
+                    
 
                 }
             }

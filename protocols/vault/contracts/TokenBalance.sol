@@ -59,8 +59,8 @@ abstract contract TokenBalance is ITokenBalance {
         public
         view
         returns (bool) {
-            if (msg.sender == spender || 
-                IVaultAuthorizer(address(this)).isControllerRegisterd(msg.sender)) {
+            if (spender == owner || 
+                IVaultAuthorizer(address(this)).isControllerRegisterd(spender)) {
                 return true;
             }
             AllowanceData memory _allowanceData = _allowance[owner][spender][token];
@@ -75,25 +75,39 @@ abstract contract TokenBalance is ITokenBalance {
     function approve(address token,address spender, uint256 amount, uint32 deadline)
             public
     {
-        _allowance[msg.sender][spender][token] = AllowanceData(amount, deadline);
-        emit Approval(msg.sender, spender, token, amount);
+       _approve(msg.sender, token, spender, amount, deadline);
+    }
+
+    function _approve(address owner, address token, address spender, uint256 amount, uint32 deadline) internal {
+        _allowance[owner][spender][token] = AllowanceData(amount, deadline);
+        emit Approval(owner, spender, token, amount);
+
     }
 
     function approve(address token, address spender, uint256 amount) public {
-        _allowance[msg.sender][spender][token] = AllowanceData(amount, 0);
+        _approve(msg.sender, token, spender, amount, 0);
     }
 
     function approveIncrease(address token, address spender, uint256 amount) public {
-        AllowanceData memory data = _allowance[msg.sender][spender][token];
-        approve(token, spender, data.amount + amount, data.deadline);
+        _approveIncrease(token, msg.sender, spender,  amount);
+    }
+
+
+    function _approveIncrease(address token, address owner, address spender, uint256 amount) internal {
+        AllowanceData memory data = _allowance[owner][spender][token];
+        _approve(owner, token, spender, data.amount + amount, data.deadline);
+    }
+
+    function _approveDecrease(address token, address owner, address spender, uint256 amount) internal {
+        AllowanceData memory data = _allowance[owner][spender][token];
+        _approve(owner, token, spender, 
+            amount >= data.amount ? 0 : data.amount - amount,
+            data.deadline
+        );
     }
 
     function approveDecrease(address token, address spender, uint256 amount) public {
-        AllowanceData memory data = _allowance[msg.sender][spender][token];
-        approve(token, spender, 
-            amount == data.amount ? 0 : data.amount - amount,
-            data.deadline
-        );
+        _approveDecrease(token, msg.sender, spender, amount);
     }
 
     function revokeAllowance(address token, address spender) public {

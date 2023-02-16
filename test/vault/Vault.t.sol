@@ -8,6 +8,8 @@ import "../../protocols/vault/contracts/Vault.sol";
 import "@almight/contract-interfaces/contracts/vault/ITokenHandler.sol";
 import "@almight/modules/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
+//solhint-disable func-name-mixedcase
+
 contract WFIL is ERC20 {
 
     constructor() ERC20("Wrapped Filecoin", "WFIL") {}
@@ -32,6 +34,7 @@ contract VaultTokenHandlerTest is Test {
     WFIL public wfil;
     address public admin;
     Vault public vault;
+    address public sender = vm.addr(1);
 
     function setUp() public {
         wfil = new WFIL();
@@ -41,13 +44,11 @@ contract VaultTokenHandlerTest is Test {
 
         admin = vm.addr(1);
         vault = new Vault(admin, address(wfil));
-
-    }
-
-    function test_ExternalToInternalTransferInsufficientAllowance() public  {
-        address sender = vm.addr(2);
         vm.startPrank(sender);
         t1.deposit(sender, 100000000000000);
+    }
+
+    function test_ExternalToInternalTransferInsufficientAllowance() public  {  
         uint256 amount = 50000;
 
         ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
@@ -56,14 +57,11 @@ contract VaultTokenHandlerTest is Test {
             sender,
             true
         );
-        vm.expectRevert();
+        vm.expectRevert("ERC20: insufficient allowance");
         vault.sendToken(address(t1), amount, param);
     }
 
     function test_ExternalToInternalTransfer() public  {
-        address sender = vm.addr(2);
-        vm.startPrank(sender);
-        t1.deposit(sender, 100000000000000);
         uint256 amount = 50000;
 
         ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
@@ -79,6 +77,126 @@ contract VaultTokenHandlerTest is Test {
 
     }
 
+
+    function test_ExternalToExternalLoopRevert() public {
+        uint256 amount = 50000;
+
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.External,
+            sender,
+            false
+        );
+        /// approve vault
+        t1.approve(address(vault), amount);
+        vm.expectRevert("CIRCULAR_TRANSFER");
+        vault.sendToken(address(t1), amount, param);
+    }
+
+    function test_ExternalToExternal() public  {
+        uint256 amount = 50000;
+        address recp = vm.addr(3);
+
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.External,
+            recp,
+            false
+        );
+        /// approve vault
+        t1.approve(address(vault), amount);
+        vault.sendToken(address(t1), amount, param);
+        assertEq(t1.balanceOf(recp), amount);
+
+    }
+
+
+    function _deposit(address token, address sender_, uint256 amount) internal {
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender_,
+            ITokenHandler.ReserveType.External,
+            sender_,
+            true
+        );
+        t1.approve(address(vault), amount);
+        vault.sendToken(address(token), amount, param);
+    }
+
+    function test_InternalToInternalSameOriginTransfer() public {
+        address recp = vm.addr(3);
+        uint256 amount = 50000;
+        _deposit(address(t1), sender, amount);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Internal,
+            recp,
+            true
+        );
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(vault.getBalance(recp, address(t1)), amount);
+
+    }
+
+    function test_InternalDiffOriginTransferINSFAllowance() public {
+        address recp = vm.addr(3);
+        uint256 amount = 50000;
+        _deposit(address(t1), sender, amount);
+        address worker = vm.addr(4);
+        vault.approve(address(t1), worker, 20);
+        vm.stopPrank();
+        vm.startPrank(worker);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Internal,
+            recp,
+            true
+        );
+        bytes memory err = "SPNA";
+        vm.expectRevert(err);
+        vault.sendToken(address(t1), amount, param);
+
+    }
+
+
+    function test_internalDiffOriginTransferINSFBalance() public {
+        address recp = vm.addr(3);
+        uint256 amount = 50000;
+        _deposit(address(t1), sender, amount);
+        address worker = vm.addr(4);
+        vault.approve(address(t1), worker, amount + 10000);
+        vm.stopPrank();
+        vm.startPrank(worker);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Internal,
+            recp,
+            true
+        );
+        bytes memory err = "INSA";
+        vm.expectRevert(err);
+        vault.sendToken(address(t1), amount + 10000, param);
+    }
+
+    function test_internalDiffOriginTransfer() public {
+        address recp = vm.addr(3);
+        address worker = vm.addr(4);
+        uint256 amount = 50000;
+        _deposit(address(t1), sender, amount);
+        vault.approve(address(t1), worker, amount);
+        vm.stopPrank();
+        vm.startPrank(worker);
+        ITokenHandler.FundTransferParam memory param = ITokenHandler.FundTransferParam(
+            sender,
+            ITokenHandler.ReserveType.Internal,
+            recp,
+            true
+        );
+        vault.sendToken(address(t1), amount, param);
+        assertEq(vault.getBalance(sender, address(t1)), 0);
+        assertEq(vault.getBalance(recp, address(t1)), amount);
+        assertFalse(vault.allowance(worker, sender, address(t1), amount));
+    }
 
 
 }
