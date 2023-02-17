@@ -5,7 +5,7 @@ import "@almight/contract-interfaces/contracts/pool-tickerd/ITickerdPoolState.so
 import "@almight/contract-interfaces/contracts/pool-tickerd/ITickerdPoolImmutables.sol";
 import "@almight/contract-interfaces/contracts/vault/IVault.sol";
 
-import "@almight/contract-utils/contracts/helpers/TemporarilyPausable.sol";
+import "@almight/contract-utils/contracts/helpers/ControlledTemporarilyPausable.sol";
 import "@almight/contract-utils/contracts/pools/Tick.sol";
 import "@almight/contract-utils/contracts/pools/TickBitMap.sol";
 import "@almight/contract-utils/contracts/pools/Position.sol";
@@ -14,8 +14,10 @@ import "@almight/contract-utils/contracts/pools/Oracle.sol";
 
 
 abstract contract TickerdPoolState is 
-    TemporarilyPausable,
-    ITickerdPoolState, ITickerdPoolImmutables {
+    ITickerdPoolState, 
+    ITickerdPoolImmutables,
+    ControlledTemporarilyPausable
+    {
     
     using Tick for mapping(int24 => Tick.Info);
     using TickBitmap for mapping(int16 => uint256);
@@ -64,12 +66,29 @@ abstract contract TickerdPoolState is
     Oracle.TickObservation public  observation;
 
 
-    constructor() TemporarilyPausable() {
+    constructor(
+        address vault_,
+        address factory_,
+        address token0_,
+        address token1_,
+        uint24 fee_,
+        int24 tickSpacing_
+    ) ControlledTemporarilyPausable(vault_) {
+        vault = vault_;
+        factory = factory_;
+        token0 = token0_;
+        token1 = token1_;
+        fee = fee_;
+        tickSpacing = tickSpacing_;
+
+        maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(tickSpacing_);
         
     }
 
-
-
+    function reserves() external view returns(uint256 balance0, uint256 balance1) {
+        balance0 = IVault(vault).getBalance(token0, address(this));
+        balance1 = IVault(vault).getBalance(token1, address(this));
+    }
 
 
 }

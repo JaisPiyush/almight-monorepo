@@ -24,7 +24,7 @@ abstract contract ControlledTemporarilyPausable is TemporarilyPausable {
     }
 
 
-    function _pause(uint256 duration) internal virtual override
+    function _pause(uint256 duration) internal override
         whenNotPaused
          {
             require(IAccessAuthorizer(authorizer).canPerform(PAUSE_ACTION_ID, msg.sender, 
@@ -32,7 +32,7 @@ abstract contract ControlledTemporarilyPausable is TemporarilyPausable {
             super._pause(duration);
     }
 
-    function _pause() internal virtual override 
+    function _pause() internal override 
         whenNotPaused
          {
             require(IAccessAuthorizer(authorizer).canPerform(PAUSE_ACTION_ID, msg.sender, 
@@ -40,7 +40,7 @@ abstract contract ControlledTemporarilyPausable is TemporarilyPausable {
             super._pause(0);
     }
 
-    function _unpause() internal virtual override whenPaused 
+    function _unpause() internal override whenPaused 
          {
             require(IAccessAuthorizer(authorizer).canPerform(UNPAUSE_ACTION_ID, msg.sender,
              address(this)), "UNAUTHORIZED");

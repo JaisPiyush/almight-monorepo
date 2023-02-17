@@ -26,7 +26,7 @@ interface ITickerdPoolState {
            bool unlocked
         );
     
-    
+    function reserves() external view returns(uint256 balance0, uint256 balance1);
 
     /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity 
     // for the entire life of the pool

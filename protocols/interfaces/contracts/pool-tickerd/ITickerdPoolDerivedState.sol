@@ -17,6 +17,6 @@ interface ITickerdPoolDerivedState {
             uint32 secondsInside
         );
     
-    function reserves() external view returns(uint256 balance0, uint256 balance1);
+    
     
 }
