@@ -20,7 +20,6 @@ interface IAccessAuthorizer {
         address where
     ) external view returns (bool);
 
-
     ///@notice grants permission to `account` for `actionId` on the contract `where`
     /// `msg.sender` must hold permission to grant permission for actionId.
     function grantPermissions(bytes32 actionId, address account, 

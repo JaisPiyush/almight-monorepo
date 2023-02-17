@@ -18,6 +18,7 @@ interface IVaultAuthorizer {
     function changeAdmin(address) external; 
 
     function pause(uint256 duration) external;
+    function pause() external;
     function unpause() external;
 
 
