@@ -59,10 +59,7 @@ abstract contract TokenBalance is ITokenBalance {
         public
         view
         returns (bool) {
-            if (spender == owner || 
-                IVaultAuthorizer(address(this)).isControllerRegisterd(spender)) {
-                return true;
-            }
+
             AllowanceData memory _allowanceData = _allowance[owner][spender][token];
 
             return _allowanceData.amount >= amount && 
