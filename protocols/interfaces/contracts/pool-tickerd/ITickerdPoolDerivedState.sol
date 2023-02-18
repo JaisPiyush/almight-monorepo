@@ -5,7 +5,7 @@ interface ITickerdPoolDerivedState {
 
     function observe()
         external view
-        returns (int56 tickCummulatives, uint160 secondsPerLiquidityCummulativeX128);
+        returns (int56 tickCummulatives, uint160 secondsPerLiquidityCumulativeX128);
     
 
     function snapshotCummulativeInside(int24 lower, int24 upper)

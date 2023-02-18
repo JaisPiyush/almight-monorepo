@@ -11,5 +11,6 @@ import "./ITickerdPoolState.sol";
 interface ITickerdPool is 
     ITickerdPoolImmutables,
     ITickerdPoolState,
+    ITickerdPoolDerivedState,
     ITickerdPoolActions,
     ITickerdPoolEvents {}

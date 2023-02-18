@@ -55,4 +55,8 @@ library Oracle {
         self.tickCummulative = last.tickCummulative;
         self.secondsPerLiquidityCumulativeX128 = last.secondsPerLiquidityCumulativeX128;
     }
+
+    function observe(TickObservation storage self) public view returns (int56, uint160) {
+        return (self.tickCummulative, self.secondsPerLiquidityCumulativeX128);
+    }
 }

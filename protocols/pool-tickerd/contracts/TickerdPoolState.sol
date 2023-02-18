@@ -19,11 +19,7 @@ abstract contract TickerdPoolState is
     ControlledTemporarilyPausable
     {
     
-    using Tick for mapping(int24 => Tick.Info);
-    using TickBitmap for mapping(int16 => uint256);
-    using Position for mapping(bytes32 => Position.Info);
-    using Position for Position.Info;
-    using Oracle for Oracle.TickObservation;
+    
 
 
     address public immutable vault;
@@ -45,7 +41,7 @@ abstract contract TickerdPoolState is
 
 
     struct PoolInfo {
-        uint160 sqrtPrixeX96;
+        uint160 sqrtPriceX96;
         int24 tick;
         bool unlocked;
     }
@@ -60,10 +56,8 @@ abstract contract TickerdPoolState is
 
     AccumulatedProtocolFees public override protocolFees;
 
-    mapping(int24 => Tick.Info) public override ticks;
-    mapping(int16 => uint256) public override tickBitmap;
-    mapping(bytes32 => Position.Info) public override positions;
-    Oracle.TickObservation public  observation;
+    
+    
 
 
     constructor(
@@ -85,7 +79,9 @@ abstract contract TickerdPoolState is
         
     }
 
-    function reserves() external view returns(uint256 balance0, uint256 balance1) {
+    
+
+    function reserves() public view returns(uint256 balance0, uint256 balance1) {
         balance0 = IVault(vault).getBalance(token0, address(this));
         balance1 = IVault(vault).getBalance(token1, address(this));
     }
