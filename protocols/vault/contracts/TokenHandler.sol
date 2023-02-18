@@ -15,7 +15,14 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                    address indexed recipient, bool toInternalBalance, uint256 amount
     );
 
+    ///solhint-disable-next-line no-empty-blocks
     constructor(address wNative) TokenBalance(wNative) {}
+
+
+    function _checkTransactionSender(address spender, address owner) 
+        private view returns(bool) {
+        return spender == owner || IVaultAuthorizer(address(this)).isControllerRegisterd(spender);
+    }
 
 
     function sendTokenFrom(address spender, address token, uint256 amount, 
@@ -24,8 +31,11 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
             require(fundTransferParam.sender != address(0), "0ADDR"); 
             if(fundTransferParam.reserveType == ReserveType.Internal) {
                 //TODO: Add error code "SenderNotApproved"
-                require(allowance(spender, 
+                if(!_checkTransactionSender(spender, fundTransferParam.sender)) {
+                    require(allowance(spender, 
                     fundTransferParam.sender, token, amount), "SPNA");
+                }
+                
                 //TODO: Add error code "InsufficientAmount"
                 require(getBalance(fundTransferParam.sender, token) >= amount, "INSA");
                 ////////////////////////////////////////////////////////////////////////
@@ -79,10 +89,14 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                 // Check for allowance to spend sender's token
                 uint256 _balance = getBalance(fundTransferParam.sender, token);
 
-                require(allowance(spender, 
+                if(!_checkTransactionSender(spender, fundTransferParam.sender)) {
+                    require(allowance(spender, 
                         fundTransferParam.sender, token, 
                         amount <= _balance ? amount: _balance
                     ), "SPNA");
+                }
+
+                
                 if (fundTransferParam.toInternalBalance) {
                    
                     

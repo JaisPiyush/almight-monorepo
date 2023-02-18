@@ -7,9 +7,6 @@ interface IVaultAuthorizer {
     function isControllerRegisterd(address controller) external view returns(bool);
     ///@notice Register the controller in the Vault, can only be called by specific user
     function registerController(address controller) external;
-    ///@notice Remove the registered controller from the Vault, can only be called by specific user
-    function removeController(address controller) external;
-
     ///@notice Returns true if the address can call `registerController`
     function canRegisterController(address) external view returns(bool);
     
