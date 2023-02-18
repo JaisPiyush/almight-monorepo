@@ -19,8 +19,6 @@ abstract contract VaultAuthorizer is
     //solhint-disable-next-line var-name-mixedcase
     bytes32 public immutable REGISTER_CONTROLLER_ACTION_ID;
     //solhint-disable-next-line var-name-mixedcase
-    bytes32 public immutable REMOVE_CONTROLLER_ACTION_ID;
-    //solhint-disable-next-line var-name-mixedcase
     bytes32 public immutable CHANGE_ADMIN_ACTION_ID;
     //solhint-disable-next-line var-name-mixedcase
     bytes32 public immutable PAUSE_ACTION_ID;
@@ -31,9 +29,6 @@ abstract contract VaultAuthorizer is
         admin = admin_;
         REGISTER_CONTROLLER_ACTION_ID = getActionId(
             bytes4(keccak256("registerController(address)")));
-        REMOVE_CONTROLLER_ACTION_ID = getActionId(
-                 bytes4(keccak256("removeController(address)"))
-            );
         CHANGE_ADMIN_ACTION_ID = getActionId(
                  bytes4(keccak256("changeAdmin(address)"))
         );
@@ -58,7 +53,6 @@ abstract contract VaultAuthorizer is
 
     function _grantAdminPermissions(address admin_) private {
         _grantPermission(REGISTER_CONTROLLER_ACTION_ID, admin_, address(this));
-        _grantPermission(REMOVE_CONTROLLER_ACTION_ID, admin_, address(this));
         _grantPermission(CHANGE_ADMIN_ACTION_ID, admin_, address(this));
         _grantPermission(PAUSE_ACTION_ID, admin_, address(this));
         _grantPermission(UNPAUSE_ACTION_ID, admin_, address(this));
@@ -66,7 +60,6 @@ abstract contract VaultAuthorizer is
 
     function _revokeAdminPermissions(address admin_) private {
         _revokePermission(REGISTER_CONTROLLER_ACTION_ID, admin_, address(this));
-        _revokePermission(REMOVE_CONTROLLER_ACTION_ID, admin_, address(this));
         _revokePermission(CHANGE_ADMIN_ACTION_ID, admin_, address(this));
         _revokePermission(PAUSE_ACTION_ID, admin_, address(this));
         _revokePermission(UNPAUSE_ACTION_ID, admin_, address(this));
@@ -81,13 +74,6 @@ abstract contract VaultAuthorizer is
         canPerformAction(REGISTER_CONTROLLER_ACTION_ID) {
             isControllerRegisterd[controller] = true;
     }
-
-    function removeController(address controller) 
-        external 
-        canPerformAction(REMOVE_CONTROLLER_ACTION_ID) {
-            isControllerRegisterd[controller] = false;
-    }
-
     function changeAdmin(address admin_) external 
         canPerformAction(CHANGE_ADMIN_ACTION_ID) {
             _revokeAdminPermissions(msg.sender);
