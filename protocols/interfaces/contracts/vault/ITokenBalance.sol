@@ -3,6 +3,8 @@ pragma solidity ^0.8.9;
 
 interface ITokenBalance {
 
+    /// @notice total supply of token held by the vaul
+    function totalSupply(address token) external view returns(uint256);
 
     /// @notice Returns the internal balance of the token held by the user
     function getBalance(address token, address user) external view returns(uint256);    

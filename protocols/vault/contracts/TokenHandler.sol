@@ -15,6 +15,8 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
                    address indexed recipient, bool toInternalBalance, uint256 amount
     );
 
+
+
     ///solhint-disable-next-line no-empty-blocks
     constructor(address wNative) TokenBalance(wNative) {}
 
@@ -22,6 +24,22 @@ abstract contract TokenHandler is ReentrancyGuard, TemporarilyPausable, ITokenHa
     function _checkTransactionSender(address spender, address owner) 
         private view returns(bool) {
         return spender == owner || IVaultAuthorizer(address(this)).isControllerRegisterd(spender);
+    }
+
+    function mint(address account, uint256 amount) external override {
+        require(account != address(0), "0ADDR");
+        _increaseInternalBalance(account, msg.sender, amount);
+        emit Transfer(address(0), ReserveType.Internal, 
+            account, true, amount);        
+    }
+
+    function burn(address account, uint256 amount) external override {
+        require(account != address(0), "0ADDR");
+        _decreaseInternalBalance(account, msg.sender, amount);
+        emit Transfer(account, 
+            ReserveType.Internal, 
+            address(0), true, 
+            amount);
     }
 
 

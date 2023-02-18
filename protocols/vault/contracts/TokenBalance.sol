@@ -26,6 +26,8 @@ abstract contract TokenBalance is ITokenBalance {
     mapping(address => mapping(address => bool)) private _tokenHoldingsRecord;
     /// @notice Amount and deadline for the allowance to spend for the users token in internal balance
     mapping(address => mapping(address => mapping(address => AllowanceData))) private _allowance;
+    /// @notice Total supplies of the token held by vault.
+    mapping(address => uint256) _totalSupplies;
 
 
 
@@ -35,6 +37,10 @@ abstract contract TokenBalance is ITokenBalance {
     
     constructor(address wrappedNative) {
         WRAPPED_NATIVE = wrappedNative;
+    }
+
+    function totalSupply(address token) external view returns(uint256) {
+        return _totalSupplies[token];
     }
 
     function getBalance(address owner, address token) public view returns(uint256) {
@@ -114,6 +120,7 @@ abstract contract TokenBalance is ITokenBalance {
 
     function _increaseInternalBalance(address owner, address token, uint256 amount) internal {
         _internalBalances[owner][token] += amount;
+        _totalSupplies[token] += amount;
         if (_tokenHoldingsRecord[owner][token] == false) {
             _tokenHoldings[owner].push(token);
             _tokenHoldingsRecord[owner][token] = true;
@@ -122,12 +129,10 @@ abstract contract TokenBalance is ITokenBalance {
 
     function _decreaseInternalBalance(address owner, address token, uint256 amount) internal returns(uint256) {
         uint256 _balance = _internalBalances[owner][token];
-        if (amount > _balance) {
-            _internalBalances[owner][token] = 0;
-            return amount - _balance ;
-        }
-        _internalBalances[owner][token] -= amount;
-        return 0;
+        uint256 deductible = amount > _balance ? _balance : amount;
+        _internalBalances[owner][token] -= deductible;
+        _totalSupplies[token] -= deductible;
+        return amount - deductible;
 
     }
 

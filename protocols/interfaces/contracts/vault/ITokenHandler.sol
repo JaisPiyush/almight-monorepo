@@ -46,4 +46,10 @@ interface ITokenHandler is ITokenBalance {
     /// @notice Withdraw the tokens from msg.sender internal balance to the original holding of the token
     /// Can be called directly by the user or through the `UserPositionController`
     function withdrawTokens(address[] calldata tokens, uint256[] calldata amounts) external;
+
+    /// @notice mint same as ERC20
+    function mint(address account, uint256 amount) external;
+
+    /// @notice burn same as ERC20
+    function burn(address account, uint256 amount) external;
 }
