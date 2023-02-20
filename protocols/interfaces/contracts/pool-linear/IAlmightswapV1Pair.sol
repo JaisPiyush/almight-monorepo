@@ -40,6 +40,13 @@ interface IAlmightswapV1Pair {
     function token0() external view returns (address);
     function token1() external view returns (address);
     function fee() external view returns (uint24);
+    function info() external view returns (
+        uint112 reserve0,
+        uint112 reserve1,
+        address token0,
+        address token1,
+        uint24 fee
+    );
     function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
     function price0CumulativeLast() external view returns (uint);
     function price1CumulativeLast() external view returns (uint);

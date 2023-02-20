@@ -107,6 +107,24 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
     }
 
 
+    function info() public view
+        returns (
+        uint112 reserve0,
+        uint112 reserve1,
+        address token0_,
+        address token1_,
+        uint24 fee_
+    ) {
+        return (
+            _reserve0,
+            _reserve1,
+            token0,
+            token1,
+            fee
+        );
+    }
+
+
     function getReserves() public view
         returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) {
             reserve0 = _reserve0;
@@ -201,6 +219,7 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
                 uint256(reserve0 * reserve1 * (feeLimit**2))
                 ,"AlmightswapV1: K"
             );
+            // TODO: add protocol fee
         }
 
         _update(balance0, balance1, reserve0, reserve1);
@@ -229,7 +248,9 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
         );
     }
 
+    // TODO: Add protocol fee system
     // TODO: Add governance based actions (setFee, pause, unpause)
+
 
     
 
