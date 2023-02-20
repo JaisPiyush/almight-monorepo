@@ -16,10 +16,37 @@ library TransferHelper {
         address to,
         uint256 value
     ) internal {
-        /// solhint-disable-next-line avoid-low-level-calls
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = token.call(
             abi.encodeWithSelector(IERC20.transfer.selector, to, value)
         );
         require(success && (data.length == 0 || abi.decode(data, (bool))), "TF");
+    }
+
+    function safeTransferFrom(
+        address token,
+        address from,
+        address to,
+        uint256 value
+    ) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(IERC20.transferFrom.selector,from, to, value)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "TF");
+    }
+
+    function safeApprove(address token, address to, uint256 value) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(IERC20.approve.selector, to, value)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "TF");
+    }
+
+    function safeTransferNative(address to, uint256 value) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(success, "TransferHelper: NATIVE_TRANSFER_FAILED");
     }
 }
