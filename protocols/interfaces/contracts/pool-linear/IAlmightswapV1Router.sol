@@ -3,16 +3,12 @@ pragma solidity ^0.8.9;
 
 interface IAlmightswapV1Router {
 
-    function factory() external pure returns (address);
+    function factory() external view returns (address);
     //solhint-disable-next-line func-name-mixedcase
-    function native() external pure returns (address);
+    function native() external view returns (address);
 
     struct AddLiquidityParam {
-        // Address of tokens to be added as pairs
-        address tokenA;
-        // When native crypto is sent along as the pair
-        // tokenB will be `address(0)`
-        address tokenB;
+        address pool;
         uint256 amountADesired;
         // Will be zero if native crypto is sent
         uint256 amountBDesired;
@@ -30,13 +26,11 @@ interface IAlmightswapV1Router {
     ) external payable returns (uint256 amountA, uint256 amountB, uint256 liqudiity);
 
     struct RemoveLiquidityParam {
-        address tokenA;
-        address tokenB;
+        address pool;
         uint256 liquidity;
         uint256 amountAMin;
         uint256 amountBMin;
         bool usingNative;
-        bool feeOnTransferToken;
         bool usingPermit;
         bool approveMax;
         uint8 v;
@@ -51,34 +45,43 @@ interface IAlmightswapV1Router {
     ) external returns (uint256 amounttA, uint256 anountB);
 
 
-    enum SwapType {
-        ExactTokensForTokens,
-        TokensForExactTokens
+    struct SwapStepInfo {
+        // address token0;
+        // address token1;
+        bool isInputZero;
+        uint256 amountIn;
+        uint256 amountOut;
     }
 
     struct SwapParam {
-        SwapType swapType;
-        uint256 amountOutMin;
-        uint256 amountIn;
-        bool feeOnTransferToken;
+        /// if false that means input token is provided with amountBorder as amountOutMin
+        /// if true order for required output token and amountBorder  is amountInMax
+        bool requiredOut;
+        // should never be zero, when native is sent should be equal to msg.value
+        uint256 amount;
+        uint256 amountBorder;
+        bool usingNative;
+        address tokenOut;        
     }
 
     function swap(
+        address tokenIn,
         address to,
         uint256 deadline,
+        // address of pools
         address[] calldata path,
         SwapParam calldata param
-    ) external payable returns (uint256[] memory amounts);
+    ) external payable returns (SwapStepInfo[] memory steps);
 
 
     function quote(uint256 amountA, uint256 reserveA, uint256 reserveB) 
         external pure returns (uint256 amountB);
-    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) 
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut, uint24 fee) 
         external pure returns (uint256 amountOut);
-    function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut) 
+    function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut, uint24 fee) 
         external pure returns (uint256 amountIn);
-    function getAmountsOut(uint256 amountIn, address[] calldata path) 
-        external view returns (uint256[] memory amounts);
-    function getAmountsIn(uint256 amountOut, address[] calldata path) 
-        external view returns (uint256[] memory amounts);
+    function getAmountsOut(address tokenIn, uint256 amountIn, address[] calldata path) 
+        external view returns (SwapStepInfo[] memory steps);
+    function getAmountsIn(address tokenOut, uint256 amountOut, address[] calldata path) 
+        external view returns (SwapStepInfo[] memory steps);
 }

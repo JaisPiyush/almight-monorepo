@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Pair.sol";
+import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Router.sol";
 
 library AlmightswapV1Library {
 
@@ -65,16 +66,26 @@ library AlmightswapV1Library {
         address tokenIn,
         uint256 amountIn,
         address[] memory path
-    ) internal view returns (uint256[] memory amounts) {
+    ) internal view returns (IAlmightswapV1Router.SwapStepInfo[] memory amounts) {
         uint256 length = path.length;
         require(length >= 2, "AlmightswapLibrary: INVALID_PATH");
-        amounts = new uint256[](path.length);
-        amounts[0] = amountIn;
+        amounts = new IAlmightswapV1Router.SwapStepInfo[](path.length);
+
+        address _tokenIn = tokenIn;
+        uint256 _amountIn = amountIn;
         for(uint256 i; i < length; i++) {
-            (uint112 reserve0, uint112 reserve1, address token0, , uint24 fee ) = IAlmightswapV1Pair(path[i]).info();
-            (uint256 reserveIn, uint256 reserveOut) = (tokenIn == token0) ? 
+            (uint112 reserve0, uint112 reserve1, address token0, 
+                address token1 , uint24 fee ) = IAlmightswapV1Pair(path[i]).info();
+            (uint256 reserveIn, uint256 reserveOut) = (_tokenIn == token0) ? 
                 (reserve0, reserve1) : (reserve1, reserve0);
-            amounts[i+1] = getAmountOut(amounts[i], reserveIn, reserveOut, fee);
+            uint256 amountOut = getAmountOut(_amountIn, reserveIn, reserveOut, fee);
+            amounts[i] = IAlmightswapV1Router.SwapStepInfo({
+                isInputZero: _tokenIn == token0,
+                amountIn: _amountIn,
+                amountOut: amountOut
+            });
+            _tokenIn = _tokenIn == token0? token1: token0;
+            _amountIn = amountOut;
         }
     }
 
@@ -82,15 +93,27 @@ library AlmightswapV1Library {
         address tokenOut,
         uint256 amountOut,
         address[] memory path
-    ) internal view returns (uint256[] memory amounts) {
+    ) internal view returns (IAlmightswapV1Router.SwapStepInfo[] memory amounts) {
         uint256 length = path.length;
         require(length >= 2, "AlmightswapLibrary: INVALID_PATH");
-        amounts[amounts.length - 1] = amountOut;
-        for (uint256 i = length - 1; i > 0; i--) {
-            (uint112 reserve0, uint112 reserve1, address token0, , uint24 fee ) = IAlmightswapV1Pair(path[i]).info();
-            (uint256 reserveIn, uint256 reserveOut) = (tokenOut != token0) ? 
+        amounts = new IAlmightswapV1Router.SwapStepInfo[](path.length);
+
+        address _tokenOut = tokenOut;
+        uint256 _amountOut = amountOut;
+
+        for (uint256 i = length - 1; i >= 0; i--) {
+            (uint112 reserve0, uint112 reserve1, 
+                address token0, address token1  , uint24 fee ) = IAlmightswapV1Pair(path[i]).info();
+            (uint256 reserveIn, uint256 reserveOut) = (_tokenOut != token0) ? 
                 (reserve0, reserve1) : (reserve1, reserve0);
-            amounts[i- 1] = getAmountIn(amounts[i], reserveIn, reserveOut, fee);
+            uint256 amountIn = getAmountIn(_amountOut, reserveIn, reserveOut, fee);
+            amounts[i] = IAlmightswapV1Router.SwapStepInfo({
+                isInputZero: _tokenOut != token0,
+                amountIn: amountIn,
+                amountOut: _amountOut
+            });
+            _tokenOut = _tokenOut != token0 ? token0 : token1;
+            _amountOut = amountIn;
         }
     }
 
