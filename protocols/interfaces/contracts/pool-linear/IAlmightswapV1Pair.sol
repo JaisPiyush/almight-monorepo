@@ -39,6 +39,7 @@ interface IAlmightswapV1Pair {
     function factory() external view returns (address);
     function token0() external view returns (address);
     function token1() external view returns (address);
+    function fee() external view returns (uint24);
     function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
     function price0CumulativeLast() external view returns (uint);
     function price1CumulativeLast() external view returns (uint);
@@ -50,5 +51,7 @@ interface IAlmightswapV1Pair {
     function skim(address to) external;
     function sync() external;
 
-    function initialize(address, address) external;
+    // introdue admin functions
+    function setFee(uint24 fee) external;
+
 }

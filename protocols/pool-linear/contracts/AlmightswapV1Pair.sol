@@ -25,6 +25,9 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
+    // fee when 100%  = 1e6
+    // 0.3 = 3000, 1 = 10000, 0.05 = 500 and so on
+    uint24 public fee;
 
     uint112 private _reserve0;
     uint112 private _reserve1;
@@ -47,10 +50,11 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
     event Sync(uint112 reserve0, uint112 reserve1);
 
 
-    constructor(address token0_, address token1_) {
+    constructor(address token0_, address token1_, uint24 fee_) {
         factory = msg.sender;
         token0 = token0_;
         token1 = token1_;
+        fee = fee_;
     }
 
     modifier lock() {
@@ -171,8 +175,8 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
         uint112 reserve1 = _reserve1;
         require(amount0Out < reserve0 && amount1Out < reserve1, "AlmightswapV1: INSUFFICIENT_LIQUIDITY");
 
-        uint balance0;
-        uint balance1;
+        uint256 balance0;
+        uint256 balance1;
         { // scope for _token{0,1}, avoids stack too deep errors
             address _token0 = token0;
             address _token1 = token1;
@@ -186,14 +190,15 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
             balance0 = IERC20(_token0).balanceOf(address(this));
             balance1 = IERC20(_token1).balanceOf(address(this));
         }
-        uint amount0In = balance0 > reserve0 - amount0Out ? balance0 - (reserve0 - amount0Out) : 0;
-        uint amount1In = balance1 > reserve1 - amount1Out ? balance1 - (reserve1 - amount1Out) : 0;
+        uint256 amount0In = balance0 > reserve0 - amount0Out ? balance0 - (reserve0 - amount0Out) : 0;
+        uint256 amount1In = balance1 > reserve1 - amount1Out ? balance1 - (reserve1 - amount1Out) : 0;
         require(amount0In > 0 || amount1In > 0, "AlmightswapV1: INSUFFICIENT_INPUT_AMOUNT");
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-            uint256 balance0Adjusted = (balance0 * 1000) - (amount0In * 3);
-            uint256 balance1Adjusted = (balance1 * 1000) - (amount1In * 3);
+            uint256 feeLimit = AlmightswapV1Library.FEE_LIMIT;
+            uint256 balance0Adjusted = (balance0 * feeLimit) - (amount0In * fee);
+            uint256 balance1Adjusted = (balance1 * feeLimit) - (amount1In * fee);
             require( balance0Adjusted * balance1Adjusted >=
-                uint256(reserve0 * reserve1 * (1000**2))
+                uint256(reserve0 * reserve1 * (feeLimit**2))
                 ,"AlmightswapV1: K"
             );
         }
@@ -223,6 +228,8 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
             _reserve1
         );
     }
+
+    // TODO: Add governance based actions (setFee, pause, unpause)
 
     
 
