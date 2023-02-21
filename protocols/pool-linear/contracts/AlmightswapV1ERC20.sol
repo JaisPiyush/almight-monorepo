@@ -3,18 +3,20 @@ pragma solidity ^0.8.9;
 
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1ERC20.sol";
 
+
+
 //solhint-disable const-name-snakecase
 contract AlmightswapV1ERC20 is IAlmightswapV1ERC20 {
 
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
-    mapping(address => uint) public nonces;
+    mapping(address => uint256) public nonces;
 
     uint256 public totalSupply;
 
 
     string public constant name = "Almightswap LP Token";
-    string public constant symbol = "ALP";
+    string public constant symbol = "ALP-V1";
     uint8 public constant decimals = 18;
 
     //solhint-disable-next-line var-name-mixedcase
