@@ -19,10 +19,14 @@ interface IAlmightswapV1Router {
         bool usingNative;
     }
 
+
+    function createPool(address tokenA, address tokenB, uint24 fee,uint256 deadline, AddLiquidityParam memory param) 
+        external payable returns (address,uint256 amountA, uint256 amountB, uint256 liqudiity);
+
     function addLiquidity(
         address to,
         uint256 deadline,
-        AddLiquidityParam calldata param
+        AddLiquidityParam memory param
     ) external payable returns (uint256 amountA, uint256 amountB, uint256 liqudiity);
 
     struct RemoveLiquidityParam {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.9;
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1ERC20.sol";
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Pair.sol";
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Callee.sol";
-import "@almight/contract-interfaces/contracts/pool-core/IAlmightswapV1Factory.sol";
+import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Factory.sol";
 
 
 

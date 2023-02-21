@@ -5,10 +5,8 @@ import "./libraries/AlmightswapV1Library.sol";
 import "./libraries/TransferHelper.sol";
 
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Router.sol";
-import "@almight/contract-interfaces/contracts/pool-core/IAlmightswapV1Factory.sol";
+import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Factory.sol";
 import "@almight/contract-interfaces/contracts/utils/IWFIL.sol";
-
-import "@almight/contract-interfaces/contracts/pool-core/IAlmightswapV1Factory.sol";
 
 import "@almight/modules/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
@@ -31,8 +29,18 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
         assert(msg.sender == native);
     }
 
-    // TODO: Add function to mint new pool
-    // Wrapped native token will always go as B or token1
+    function createPool(address tokenA, address tokenB, uint24 fee, uint256 deadline, AddLiquidityParam memory param)
+        external payable ensure(deadline) 
+        virtual override returns (address pair, uint256 amountA, uint256 amountB, uint256 liqudiity) {
+            if (tokenB == address(0)) {
+                require(msg.value > 0, "AlmightswapV1Router: INSUFFICIENT_TOKEN");
+                tokenB = native;
+            }
+            pair = IAlmightswapV1Factory(factory).createPair(tokenA, tokenB, fee);
+            param.pool = pair;
+            (amountA, amountB, liqudiity) = addLiquidity(msg.sender, deadline, param);
+    }
+
 
     function _addLiquidity(
         address pool,
@@ -65,8 +73,8 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
     function addLiquidity(
         address to,
         uint256 deadline,
-        AddLiquidityParam calldata param
-    ) external payable virtual override ensure(deadline)
+        AddLiquidityParam memory param
+    ) public payable virtual override ensure(deadline)
         returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
             (, , address token0, address token1, ) = IAlmightswapV1Pair(param.pool).info();
             (amountA, amountB) = _addLiquidity(
