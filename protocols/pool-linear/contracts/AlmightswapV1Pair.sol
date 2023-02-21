@@ -87,7 +87,7 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
     }
 
     function _mintFee(uint112 reserve0, uint112 reserve1) private returns (bool feeOn) {
-        address feeTo = IAlmightswapV1Factory(factory).feeTo();
+        address feeTo = IAlmightswapV1Factory(factory).feeCollector();
         feeOn = feeTo != address(0);
         uint256 _kLast = kLast;
         if (feeOn) {
@@ -215,11 +215,12 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
             uint256 feeLimit = AlmightswapV1Library.FEE_LIMIT;
             uint256 balance0Adjusted = (balance0 * feeLimit) - (amount0In * fee);
             uint256 balance1Adjusted = (balance1 * feeLimit) - (amount1In * fee);
+            
             require( balance0Adjusted * balance1Adjusted >=
                 uint256(reserve0 * reserve1 * (feeLimit**2))
                 ,"AlmightswapV1: K"
             );
-            // TODO: add protocol fee
+            //TODO: deduct and transfer protocol fees
         }
 
         _update(balance0, balance1, reserve0, reserve1);

@@ -16,6 +16,7 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
     address public immutable override native;
 
     modifier ensure(uint256 deadline) {
+        //solhint-disable-next-line not-rely-on-time
         require(deadline >= block.timestamp, "AlmigtswapV1: EXPIRED");
         _;
     }
