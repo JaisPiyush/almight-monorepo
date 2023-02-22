@@ -37,7 +37,8 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
                 require(msg.value > 0, "AlmightswapV1Router: INSUFFICIENT_TOKEN");
                 tokenB = native;
             }
-            pair = IAlmightswapV1Factory(factory).createPair(tokenA, tokenB, fee);
+            pair = IAlmightswapV1Factory(factory).createPair(tokenA, 
+                tokenB, fee);
             param.pool = pair;
             (amountA, amountB, liqudiity) = addLiquidity(msg.sender, deadline, param);
     }
@@ -51,7 +52,7 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
         uint256 amountAMin,
         uint256 amountBMin
     ) internal virtual returns (uint256 amountA, uint256 amountB)  {
-        require(IAlmightswapV1Factory(factory).isPoolRegisterd(pool), 
+        require(IAlmightswapV1Factory(factory).isPoolRegistered(pool), 
             "AlmightswapV1Router: Pool is not registerd"
         );
         (uint256 reserveA, uint256 reserveB, ) = IAlmightswapV1Pair(pool).getReserves();

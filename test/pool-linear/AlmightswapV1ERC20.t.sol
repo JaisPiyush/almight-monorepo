@@ -6,15 +6,8 @@ pragma solidity ^0.8.9;
 
 
 import "@almight/modules/forge-std/src/Test.sol";
-import "../../protocols/pool-linear/contracts/AlmightswapV1ERC20.sol";
+import "./shared/MockAlmightswapV1ERC20.sol";
 
-
-contract MockAlmightswapV1ERC20 is AlmightswapV1ERC20 {
-
-    constructor(uint256 tokenSupply) AlmightswapV1ERC20() {
-        _mint(msg.sender, tokenSupply);
-    }
-}
 
 contract TestAlmightswapV1ERC20 is Test {
     MockAlmightswapV1ERC20 public token;

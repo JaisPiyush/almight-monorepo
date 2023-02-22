@@ -10,7 +10,7 @@ interface IAlmightswapV1Factory {
     // function getPair(address tokenA, address tokenB, uint24 fee) external view returns (address pair);
     function allPairs(uint) external view returns (address pair);
     function allPairsLength() external view returns (uint256);
-    function isPoolRegisterd(address pool) external view returns(bool);
+    function isPoolRegistered(address pool) external view returns(bool);
 
     function createPair(address tokenA, address tokenB, uint24 fee) external returns (address pair);
 

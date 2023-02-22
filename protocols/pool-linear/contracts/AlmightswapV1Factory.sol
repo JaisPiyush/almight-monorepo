@@ -8,7 +8,7 @@ contract AlmightswapV1Factory is IAlmightswapV1Factory {
 
     address public feeCollector;
     address public feeCollectorSetter;
-    mapping(address => bool) public  isPoolRegisterd;
+    mapping(address => bool) public  isPoolRegistered;
     address[] public override allPairs;
 
     constructor(address collectorSetter)  {
@@ -19,15 +19,18 @@ contract AlmightswapV1Factory is IAlmightswapV1Factory {
         return allPairs.length;
     }
 
+
     function createPair(address tokenA, address tokenB, uint24 fee) external returns(address pair) {
         require(tokenA != tokenB, "AlmightswapV1: IDENTICAL_ADDRESSES");
         require(tokenA != address(0) && tokenB != address(0), "AlmightswapV1: ZERO_ADDRESS");
         AlmightswapV1Pair pool = new AlmightswapV1Pair(tokenA, tokenB, fee);
         pair = address(pool);
-        isPoolRegisterd[pair] = true;
+        isPoolRegistered[pair] = true;
         allPairs.push(pair);
         emit PairCreated(tokenA, tokenB, pair, allPairs.length);
     }
+
+
 
     function setFeeCollector(address feeCollector_) external override {
         require(msg.sender == feeCollectorSetter, "AlmightswapV1Factory: FORBIDDEN");
