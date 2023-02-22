@@ -10,6 +10,7 @@ import "@almight/contract-interfaces/contracts/utils/IWFIL.sol";
 
 import "@almight/modules/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
+
 contract AlmightswapV1Router is IAlmightswapV1Router {
 
     address public immutable override factory;
@@ -30,7 +31,8 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
         assert(msg.sender == native);
     }
 
-    function createPool(address tokenA, address tokenB, uint24 fee, uint256 deadline, AddLiquidityParam memory param)
+    function createPool(address tokenA, address tokenB, uint24 fee, 
+        uint256 deadline, AddLiquidityParam memory param)
         external payable ensure(deadline) 
         virtual override returns (address pair, uint256 amountA, uint256 amountB, uint256 liqudiity) {
             if (tokenB == address(0)) {
@@ -98,13 +100,13 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
             }
 
             liquidity = IAlmightswapV1Pair(param.pool).mint(to);
-            // refund dust eth
+            // refund dust native
             if (param.usingNative && msg.value > amountB) {
                 TransferHelper.safeTransferNative(msg.sender, msg.value - amountB);
             }
     }
 
-    function removeLiqudity(
+    function removeLiquidity(
         address to,
         uint256 deadline,
         RemoveLiquidityParam calldata param
@@ -126,7 +128,7 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
                 ( , , address token0, address token1,) = pool.info();
                 (amountA, amountB) = token1 == native? (amountA, amountB) : (amountB, amountA);
                 TransferHelper.safeTransfer(token1 == native ? token0 : token1, to, amountA);
-                IWFIL(native).withdraw(amountB);
+                IWFIL(native).withdraw(amountB); 
                 TransferHelper.safeTransferNative(to, amountB);
             }         
     }
@@ -147,27 +149,20 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
     }
 
     function swap(
+        // When using native token for input this must be native() address
         address tokenIn,
         address to,
         uint256 deadline,
         address[] calldata path,
         SwapParam calldata param
     ) external payable virtual override ensure(deadline) returns(SwapStepInfo[] memory steps) {
-        if (param.usingNative) {
-            require(tokenIn == native, "AlmightswapV1Router: INVALID_PATH");
-            if (!param.requiredOut) {
-                require(msg.value >= param.amount, "AlmightswapV1Router: INSUFFICIENT_TOKEN");
-                IWFIL(native).deposit{value: param.amount}();
-                assert(IWFIL(native).transfer(path[0], param.amount));
-            }  
-        }
         if(param.requiredOut) {
             require(param.tokenOut != address(0), "AlmightswapV1Router: INVALID_OUT");
         }
         steps = !param.requiredOut ? 
             AlmightswapV1Library.getAmountsOut(tokenIn, param.amount, path) : 
             AlmightswapV1Library.getAmountsIn(param.tokenOut, param.amount, path);
-
+        
         if (param.requiredOut) {
             require(steps[0].amountIn <= param.amountBorder, "AlmightswapV1Router: EXCESSIVE_INPUT_AMOUN");
         }else {
@@ -175,8 +170,16 @@ contract AlmightswapV1Router is IAlmightswapV1Router {
                 "AlmightswapV1Router: INSUFFICIENT_OUTPUT_AMOUNT"
             );
         }
-        TransferHelper.safeTransferFrom(tokenIn, msg.sender, path[0], steps[0].amountIn);
-        _swap(to, path, steps);
+        if(param.usingNative && !param.requiredOut && tokenIn == native) {
+            require(msg.value >= steps[0].amountIn, "AlmightswapV1Router: INSUFFICIENT_TOKEN");
+            IWFIL(native).deposit{value: steps[0].amountIn}();
+            assert(IWFIL(native).transfer(path[0], steps[0].amountIn));
+        }else {
+            TransferHelper.safeTransferFrom(tokenIn, msg.sender, path[0], steps[0].amountIn);
+        }
+        
+        address to_ = param.usingNative && param.requiredOut ? address(this): to;
+        _swap(to_, path, steps);
         if (param.usingNative && param.requiredOut) {
             IWFIL(native).withdraw(steps[steps.length - 1].amountOut);
             TransferHelper.safeTransferNative(to, steps[steps.length - 1].amountOut);

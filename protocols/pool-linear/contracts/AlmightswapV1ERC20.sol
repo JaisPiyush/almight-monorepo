@@ -5,6 +5,8 @@ import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1ERC20.s
 
 
 
+import "@almight/modules/forge-std/src/console2.sol";
+
 //solhint-disable const-name-snakecase
 contract AlmightswapV1ERC20 is IAlmightswapV1ERC20 {
 
@@ -88,7 +90,8 @@ contract AlmightswapV1ERC20 is IAlmightswapV1ERC20 {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline))
+                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, 
+                value, nonces[owner]++, deadline))
             )
         );
         address recoveredAddress = ecrecover(digest, v, r, s);

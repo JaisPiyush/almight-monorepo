@@ -44,7 +44,7 @@ interface IAlmightswapV1Router {
         bytes32 s;
     }
 
-    function removeLiqudity(
+    function removeLiquidity(
         address to,
         uint256 deadline,
         RemoveLiquidityParam calldata param

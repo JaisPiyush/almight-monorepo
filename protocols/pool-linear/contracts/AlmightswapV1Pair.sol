@@ -6,7 +6,7 @@ import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Pair.so
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Callee.sol";
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Factory.sol";
 
-import "@almight/modules/forge-std/src/console2.sol";
+
 
 import "./libraries/UQ112x112.sol";
 import "./libraries/AlmightswapV1Library.sol";
