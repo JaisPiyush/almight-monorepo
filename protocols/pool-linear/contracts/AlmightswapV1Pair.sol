@@ -6,7 +6,7 @@ import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Pair.so
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Callee.sol";
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Factory.sol";
 
-
+import "@almight/modules/forge-std/src/console2.sol";
 
 import "./libraries/UQ112x112.sol";
 import "./libraries/AlmightswapV1Library.sol";
@@ -139,12 +139,15 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
         uint256 balance1 = IAlmightswapV1ERC20(token1).balanceOf(address(this));
         uint256 amount0 = balance0 - reserve0;
         uint256 amount1 = balance1 - reserve1;
-
         bool feeOn = _mintFee(_reserve0, _reserve1);
+        
         // gas savings, must be defined here since totalSupply can update in _mintFee
         uint256 _totalSupply = totalSupply; 
+        
         if (_totalSupply == 0) {
-            liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
+            liquidity = Math.sqrt(amount0 * amount1);
+            require(liquidity >= MINIMUM_LIQUIDITY, "AlmightswapV1: INSUFFICIENT_MIN_LIQUIDITY");
+            liquidity = liquidity - MINIMUM_LIQUIDITY;
             _mint(address(0), MINIMUM_LIQUIDITY);
         } else {
             liquidity = Math.min((amount0 * _totalSupply) / reserve0, (amount1 * _totalSupply) / reserve1);
@@ -213,11 +216,12 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
         require(amount0In > 0 || amount1In > 0, "AlmightswapV1: INSUFFICIENT_INPUT_AMOUNT");
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
             uint256 feeLimit = AlmightswapV1Library.FEE_LIMIT;
+
             uint256 balance0Adjusted = (balance0 * feeLimit) - (amount0In * fee);
-            uint256 balance1Adjusted = (balance1 * feeLimit) - (amount1In * fee);
             
+            uint256 balance1Adjusted = (balance1 * feeLimit) - (amount1In * fee);
             require( balance0Adjusted * balance1Adjusted >=
-                uint256(reserve0 * reserve1 * (feeLimit**2))
+                uint256(reserve0) * uint256(reserve1) * (feeLimit**2)
                 ,"AlmightswapV1: K"
             );
             //TODO: deduct and transfer protocol fees
