@@ -6,6 +6,8 @@ import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Pair.so
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Callee.sol";
 import "@almight/contract-interfaces/contracts/pool-linear/IAlmightswapV1Factory.sol";
 
+import "@almight/modules/openzeppelin-contracts/contracts/security/Pausable.sol";
+
 
 
 import "./libraries/UQ112x112.sol";
@@ -15,7 +17,7 @@ import "./libraries/Math.sol";
 
 import "./AlmightswapV1ERC20.sol";
 
-contract AlmightswapV1Pair is AlmightswapV1ERC20 {
+contract AlmightswapV1Pair is Pausable, AlmightswapV1ERC20 {
     using UQ112x112 for uint224;
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
@@ -50,7 +52,14 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
     event Sync(uint112 reserve0, uint112 reserve1);
 
 
-    constructor(address token0_, address token1_, uint24 fee_) {
+    modifier onlyAuthorizedExecutor() {
+        require(msg.sender == 
+            IAlmightswapV1Factory(factory).authorizedExecutor(), "CAN_NOT_BE_EXECUTED");
+        _;
+    }
+
+
+    constructor(address token0_, address token1_, uint24 fee_) Pausable() {
         factory = msg.sender;
         token0 = token0_;
         token1 = token1_;
@@ -253,8 +262,18 @@ contract AlmightswapV1Pair is AlmightswapV1ERC20 {
         );
     }
 
-    // TODO: Add protocol fee system
-    // TODO: Add governance based actions (setFee, pause, unpause)
+
+    function setFee(uint24 fee_) external onlyAuthorizedExecutor {
+        fee = fee_;
+    }
+
+    function pause() external onlyAuthorizedExecutor {
+        _pause();
+    }
+
+    function unpause() external onlyAuthorizedExecutor {
+        _unpause();
+    }
 
 
     
