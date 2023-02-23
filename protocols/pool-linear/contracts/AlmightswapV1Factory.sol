@@ -11,8 +11,11 @@ contract AlmightswapV1Factory is IAlmightswapV1Factory {
     mapping(address => bool) public  isPoolRegistered;
     address[] public override allPairs;
 
-    constructor(address collectorSetter)  {
+    address public authorizer;
+
+    constructor(address collectorSetter, address authorizer_)  {
         feeCollectorSetter = collectorSetter;
+        authorizer = authorizer_;
     }
 
     function allPairsLength() external override view returns (uint256) {

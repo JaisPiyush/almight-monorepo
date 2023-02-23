@@ -7,6 +7,8 @@ interface IAlmightswapV1Factory {
     function feeCollector() external view returns (address);
     function feeCollectorSetter() external view returns (address);
 
+    function authorizer() external view returns(address);
+
     // function getPair(address tokenA, address tokenB, uint24 fee) external view returns (address pair);
     function allPairs(uint) external view returns (address pair);
     function allPairsLength() external view returns (uint256);

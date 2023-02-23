@@ -44,7 +44,7 @@ contract TestAlmightV1Router is Test {
         token1 = new MockAlmightswapV1ERC20(TOKEN_SUPPLY);
         token2 = new MockAlmightswapV1ERC20(TOKEN_SUPPLY);
         wfil = new WFIL();
-        factory = address(new AlmightswapV1Factory(address(this)));
+        factory = address(new AlmightswapV1Factory(address(this), address(0)));
         pair = AlmightswapV1Pair(
             AlmightswapV1Factory(factory).createPair(address(token1), address(token2), fee)
         );

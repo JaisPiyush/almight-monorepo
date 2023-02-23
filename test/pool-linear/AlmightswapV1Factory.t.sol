@@ -23,7 +23,7 @@ contract TestAlmightswapV1Factory is Test {
     function setUp() public  {
         token1 = address(new MockAlmightswapV1ERC20(TOKEN_SUPPLY));
         token2 = address(new MockAlmightswapV1ERC20(TOKEN_SUPPLY));
-        factory = new AlmightswapV1Factory(address(this));
+        factory = new AlmightswapV1Factory(address(this), address(0));
     }
 
     function test_createPairSameTokenFailure() public {
