@@ -11,6 +11,10 @@
     "apps/*",
     "lib"
   ],
+  "scripts": {
+    "clean": "turbo run clean && rm -rf node_modules",
+    "install": "turbo run install"
+  },
   "devDependencies": {
     "@typescript-eslint/parser": "^5.51.0",
     "eslint": "^8.34.0",
@@ -19,6 +23,7 @@
     "solc": "^0.8.18",
     "solhint": "^3.3.8",
     "tsdx": "^0.14.1",
+    "turbo": "^1.8.2",
     "vitest": "^0.28.4"
   }
 }
